@@ -30,15 +30,15 @@ class OllamaClient:
             print(f"Error listing Ollama models: {e}")
             # Return default models if Ollama is not running
             return [
-                {"name": "qwen2.5:7b", "size": 0, "modified_at": ""},
+                {"name": "gpt-oss:latest", "size": 0, "modified_at": ""},
                 {"name": "qwen2.5-coder:7b", "size": 0, "modified_at": ""},
-                {"name": "gpt-oss:latest", "size": 0, "modified_at": ""}
+                {"name": "qwen2.5:3b", "size": 0, "modified_at": ""}
             ]
     
     async def generate(
         self,
         prompt: str,
-        model: str = "qwen2.5:7b",
+        model: str = "gpt-oss:latest",
         system: Optional[str] = None,
         context: Optional[List[Dict]] = None
     ) -> str:
@@ -70,7 +70,7 @@ class OllamaClient:
     async def chat(
         self,
         messages: List[Dict[str, str]],
-        model: str = "qwen2.5:7b"
+        model: str = "gpt-oss:latest"
     ) -> str:
         """Chat completion with Ollama."""
         try:
@@ -94,7 +94,7 @@ class OllamaClient:
     async def generate_stream(
         self,
         prompt: str,
-        model: str = "qwen2.5:7b"
+        model: str = "gpt-oss:latest"
     ):
         """Generate text with streaming."""
         try:

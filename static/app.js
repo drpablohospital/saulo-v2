@@ -22,6 +22,7 @@ const elements = {
     langostaBadge: document.getElementById('langosta-badge'),
     menuToggle: document.getElementById('menu-toggle'),
     sidebar: document.getElementById('sidebar'),
+    chatContainer: document.querySelector('.chat-container'),
     usernameInput: document.getElementById('username-input'),
     passwordInput: document.getElementById('password-input'),
     loginSubmit: document.getElementById('login-submit'),
@@ -44,7 +45,7 @@ async function init() {
 // Load available Ollama models
 async function loadModels() {
     try {
-        const response = await fetch('/chat/models');
+        const response = await fetch('/api/chat/models');
         const data = await response.json();
         availableModels = data.models || [];
         
@@ -53,10 +54,10 @@ async function loadModels() {
             `<option value="${m.name}">${m.name}</option>`
         ).join('');
         
-        // Select default
+        // Select default - gpt-oss para Saulo
         const defaultModel = availableModels.find(m => 
-            m.name.includes('qwen2.5:7b') || m.name.includes('qwen2.5:latest')
-        );
+            m.name.includes('gpt-oss')
+        ) || availableModels[0];
         if (defaultModel) {
             elements.modelSelect.value = defaultModel.name;
         }
@@ -100,9 +101,18 @@ function setupEventListeners() {
         if (e.key === 'Enter') doLogin();
     });
     
-    // Mobile menu
+    // Mobile menu - Fixed for mobile
     elements.menuToggle.addEventListener('click', () => {
-        elements.sidebar.classList.toggle('hidden');
+        if (window.innerWidth <= 768) {
+            elements.sidebar.classList.toggle('visible');
+        }
+    });
+    
+    // Close sidebar when clicking outside on mobile
+    elements.chatContainer.addEventListener('click', (e) => {
+        if (window.innerWidth <= 768 && elements.sidebar.classList.contains('visible')) {
+            elements.sidebar.classList.remove('visible');
+        }
     });
 }
 
@@ -111,7 +121,7 @@ function checkAuthStatus() {
     if (authToken) {
         elements.adminBtn.textContent = '👤 Salir';
         // Verify token is valid
-        fetch('/auth/me', {
+        fetch('/api/auth/me', {
             headers: { 'Authorization': `Bearer ${authToken}` }
         }).catch(() => {
             logout();
@@ -128,7 +138,7 @@ async function doLogin() {
     const password = elements.passwordInput.value;
     
     try {
-        const response = await fetch('/auth/login', {
+        const response = await fetch('/api/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
@@ -159,13 +169,15 @@ function logout() {
     showToast('👋 Sesión cerrada');
 }
 
-// Show/hide modal
+// Show/hide modal - Fixed to use CSS classes
 function showLoginModal() {
     elements.loginModal.classList.remove('hidden');
+    elements.loginModal.classList.add('visible');
     elements.passwordInput.focus();
 }
 
 function hideLoginModal() {
+    elements.loginModal.classList.remove('visible');
     elements.loginModal.classList.add('hidden');
     elements.passwordInput.value = '';
 }
@@ -222,7 +234,7 @@ async function sendMessage() {
     const loadingId = showLoading();
     
     try {
-        const response = await fetch('/chat/', {
+        const response = await fetch('/api/chat/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
